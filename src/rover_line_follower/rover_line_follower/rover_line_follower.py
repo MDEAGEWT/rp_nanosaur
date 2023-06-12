@@ -185,7 +185,7 @@ def main():
 
     global publisher
     publisher = node.create_publisher(Twist, '/nanosaur/cmd_vel', rclpy.qos.qos_profile_system_default)
-    subscription = node.create_subscription(Image, '/nanosaur/camera/image_raw',
+    subscription = node.create_subscription(Image, '/camera/image_raw',
                                             image_callback,
                                             rclpy.qos.qos_profile_sensor_data)
 
