@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="cozmo">
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A track -->
+    <include>
+      <uri>model://track2</uri>
+    </include>
+
+  </world>
+</sdf>

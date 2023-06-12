@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.4">
+   <model name="track2">
+      <static>true</static>
+      <link name="link">
+         <visual name="visual">
+            <geometry>
+                <box>
+                    <size>5 5 0.1</size>
+                </box>
+            </geometry>
+            <material>
+               <script>
+                  <uri>model://track2/materials/scripts</uri>
+                  <uri>model://track2/materials/textures/</uri>
+                  <name>Track2/Image</name>
+               </script>
+            </material>
+         </visual>
+         <collision name="body_collision">
+            <geometry>
+               <box>
+                 <size>5 5 0.1</size>
+               </box>
+             </geometry>
+         </collision>
+      </link>
+   </model>
+</sdf>
