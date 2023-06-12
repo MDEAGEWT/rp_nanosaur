@@ -115,7 +115,7 @@ class NanoSaur(Node):
         self.r = [0.0, 0.0] # [right, left]
         self.subscription = self.create_subscription(
             Twist,
-            'cmd_vel',
+            '/nanosaur/cmd_vel',
             self.drive_callback,
             10)
         self.subscription  # prevent unused variable warning
