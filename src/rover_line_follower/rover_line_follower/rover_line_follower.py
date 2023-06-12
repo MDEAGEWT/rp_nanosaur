@@ -14,17 +14,17 @@ import cv_bridge
 bridge = cv_bridge.CvBridge()
 
 # Robot's speed when following the line
-LINEAR_SPEED = 0.2
+LINEAR_SPEED = 0.21
 
 # Proportional constant to be applied on speed when turning 
 # (Multiplied by the error value)
-KP = 3/100 
+KP = 8/1000
 
 # If the line is completely lost, the error value shall be compensated by:
-LOSS_FACTOR = 1.0 #1.5
+LOSS_FACTOR = 1.2 #1.5
 
 # Send messages every $TIMER_PERIOD seconds
-TIMER_PERIOD = 0.03
+TIMER_PERIOD = 0.01
 
 # When about to end the track, move for ~$FINALIZATION_PERIOD more seconds
 FINALIZATION_PERIOD = 4
@@ -41,7 +41,7 @@ def crop_size(height, width):
      Width_left_boundary, Width_right_boundary)
     """
     ## Update these values to your liking.
-    return (1*height//4, height, width//4, 3*width//4)
+    return (3*height//4, height, 0, width)
 
 
 # Global vars. initial values
@@ -88,6 +88,8 @@ def get_contour_data(mask, out):
         M = cv2.moments(contour)    
         
         # Contour is part of the track
+        # if M["m00"] == 0:
+        #     M["m00"] = 0.0000001
         line['x'] = int(M["m10"]/M["m00"])
         line['y'] = int(M["m01"]/M["m00"])
         
@@ -153,7 +155,7 @@ def timer_callback():
     # Determine the speed to turn and get the line in the center of the camera.
     message.angular.z = float(error) * -KP
     
-    # print("Error: {} | Angular Z: {}, ".format(error, message.angular.z))
+    print("Error: {} | Angular Z: {}, ".format(error, message.angular.z))
     cv2.putText(output, f'{error}:{message.angular.z}', 
                 (crop_center[0], crop_center[1]-20), 
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,0), 2)
@@ -185,7 +187,7 @@ def main():
 
     global publisher
     publisher = node.create_publisher(Twist, '/nanosaur/cmd_vel', rclpy.qos.qos_profile_system_default)
-    subscription = node.create_subscription(Image, '/camera/image_raw',
+    subscription = node.create_subscription(Image, '/nanosaur/camera/image_raw',
                                             image_callback,
                                             rclpy.qos.qos_profile_sensor_data)
 
