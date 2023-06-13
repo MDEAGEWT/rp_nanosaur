@@ -64,7 +64,7 @@ public:
     camera_cvt = new imageConverter();
     
     // Initialize publisher
-    camera_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image_raw", 10);
+    camera_pub_ = this->create_publisher<sensor_msgs::msg::Image>("nanosaur/camera/image_raw", 10);
     info_pub_ = create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 10);
     
     // // Load frame_id name
