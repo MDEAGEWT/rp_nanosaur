@@ -142,7 +142,8 @@ def timer_callback():
 
     # error:= The difference between the center of the image
     # and the center of the line
-    error = x - width//2
+    error = x - width//2    # get a binary picture, where non-zero values represent the line.
+
 
     message.linear.x = LINEAR_SPEED
 

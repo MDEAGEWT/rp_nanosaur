@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'rover_line_follower = rover_line_follower.rover_line_follower:main'
+            'gazebo = rover_line_follower.gazebo:main',
+            'nanosaur = rover_line_follower.nanosaur:main'
         ],
     },
 )
