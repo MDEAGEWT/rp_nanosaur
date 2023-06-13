@@ -14,11 +14,11 @@ import cv_bridge
 bridge = cv_bridge.CvBridge()
 
 # Robot's speed when following the line
-LINEAR_SPEED = 0.21
+LINEAR_SPEED = 0.013
 
 # Proportional constant to be applied on speed when turning 
 # (Multiplied by the error value)
-KP = 8/1000
+KP = 5/1000
 
 # If the line is completely lost, the error value shall be compensated by:
 LOSS_FACTOR = 1.2 #1.5
@@ -30,7 +30,7 @@ TIMER_PERIOD = 0.01
 FINALIZATION_PERIOD = 4
 
 # BGR values to filter only the selected color range
-lower_bgr_values = np.array([31,  42,  53])
+lower_bgr_values = np.array([60, 89, 53])
 upper_bgr_values = np.array([255, 255, 255])
 
 def crop_size(height, width):
