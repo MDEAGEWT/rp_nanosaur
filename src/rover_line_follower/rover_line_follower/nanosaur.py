@@ -14,23 +14,24 @@ import cv_bridge
 bridge = cv_bridge.CvBridge()
 
 # Robot's speed when following the line
-LINEAR_SPEED = 0.013
+LINEAR_SPEED = 0.012
 
 # Proportional constant to be applied on speed when turning 
 # (Multiplied by the error value)
-KP = 5/1000
+KP = 26/10000
 
 # If the line is completely lost, the error value shall be compensated by:
 LOSS_FACTOR = 1.2 #1.5
 
 # Send messages every $TIMER_PERIOD seconds
-TIMER_PERIOD = 0.01
+TIMER_PERIOD = 0.03
 
 # When about to end the track, move for ~$FINALIZATION_PERIOD more seconds
 FINALIZATION_PERIOD = 4
 
 # BGR values to filter only the selected color range
-lower_bgr_values = np.array([60, 89, 53])
+lower_bgr_values = np.array([64, 114, 24])
+#lower_bgr_values = np.array([70, 70, 70])
 upper_bgr_values = np.array([255, 255, 255])
 
 def crop_size(height, width):
@@ -41,7 +42,7 @@ def crop_size(height, width):
      Width_left_boundary, Width_right_boundary)
     """
     ## Update these values to your liking.
-    return (3*height//4, height, 0, width)
+    return (2*height//4, height, 2*width//8, 6*width//8)
 
 
 # Global vars. initial values
@@ -88,18 +89,29 @@ def get_contour_data(mask, out):
         M = cv2.moments(contour)    
         
         # Contour is part of the track
-        # if M["m00"] == 0:
-        #     M["m00"] = 0.0000001
+        if M["m00"] == 0:
+            M["m00"] = 0.0000001
+
+        
         line['x'] = int(M["m10"]/M["m00"])
         line['y'] = int(M["m01"]/M["m00"])
         
         sum_x += line['x']
         sum_y += line['y']
+
+    if len(contours):        
+        line['x'] = int(sum_x / len(contours))
+        line['y'] = int(sum_y / len(contours))    
+    else:
+        line['x'] = 0
+        line['y'] = 0
         
-    line['x'] = int(sum_x / len(contours))
-    line['y'] = int(sum_y / len(contours))    
     return line
 
+
+stop = 0
+last = "no turn"
+last_z = 0
 def timer_callback():
     """
     Function to be called when the timer ticks.
@@ -126,6 +138,11 @@ def timer_callback():
     # get a binary picture, where non-zero values represent the line.
     # (filter the color values so only the contour is seen)
     mask = cv2.inRange(crop, lower_bgr_values, upper_bgr_values)
+    kernel = np.ones((10,10), np.uint8)
+    #ks = (5,5)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    #gau = cv2.GaussianBlur(mask, ks, 0)
+
 
     # get the centroid of the biggest contour in the picture,
     # and plot its detail on the cropped part of the output image
@@ -144,29 +161,54 @@ def timer_callback():
     # and the center of the line
     error = x - width//2    # get a binary picture, where non-zero values represent the line.
 
-
-    message.linear.x = LINEAR_SPEED
-
-    # plot the line centroid on the image
-    crop_center = (int((crop_w_start+crop_w_stop)/2), int((crop_h_start+crop_h_stop)/2))
-    cv2.circle(output, (crop_w_start + line['x'], crop_h_start + line['y']), 3, (0,255,0), 3)
-    cv2.circle(output, crop_center, 3, (255,0,0), 3)
-
     
-    # Determine the speed to turn and get the line in the center of the camera.
-    message.angular.z = float(error) * -KP
-    
-    print("Error: {} | Angular Z: {}, ".format(error, message.angular.z))
-    cv2.putText(output, f'{error}:{message.angular.z}', 
-                (crop_center[0], crop_center[1]-20), 
-                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,0), 2)
-    
+    start = -1
+    end = -1
+    end_line = mask[len(mask) - 1]
+    for i in range(0,len(end_line)):
+        if end_line[i] == 0 and start == -1:
+            start = i
+        if end_line[i] == 255 and start != -1 and end == -1:
+            end = i
 
-    # Plot the boundaries where the image was cropped
-    cv2.rectangle(output, (crop_w_start, crop_h_start), (crop_w_stop, crop_h_stop), (0,0,255), 2)
+    if end == -1:
+        end = len(end_line) - 1
+
+    pos = start + ((end - start ) // 2)
+
+    center = len(end_line) // 2
+
+    print(start, end, pos, center)
+    global stop
+    global last_z
+
+    if start == -1:
+        print("후진")
+        message.linear.x = -0.03
+        message.linear.z = last_z * -1.0
+    elif pos >= center - 30 and pos <= center + 30:
+        print("직진")
+        message.linear.x = 0.03
+    elif pos <= center - 15:
+        stop = stop + 1
+        print("턴1")
+        message.linear.x = 0.02
+        message.angular.z = 0.2
+        last_z = 0.2
+    else:
+        stop = stop + 1
+        print("턴2")
+        message.linear.x = 0.02
+        message.angular.z = -0.2
+        last_z = -0.2
+
+
 
     # Show the output image to the user
-    cv2.imshow("output", output)
+    #cv2.imshow("output", output)
+    #cv2.imshow("mask", mask)
+    #cv2.imshow("mor", mor)
+    #cv2.imshow("gau", gau)
     # Print the image for 5milis, then resume execution
     cv2.waitKey(1)
 
